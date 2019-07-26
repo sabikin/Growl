@@ -16,11 +16,11 @@ Show Channel where
 
 data Automata a b = Aut (a -> s -> Pair b s)
 
-loop : ((Pair a c) -> s -> (Pair (Pair b c) s)) -> a -> s -> (Pair b s)
+loop : (Pair a (Lazy c) -> s -> Lazy (Pair (Pair b (Lazy c)) s)) -> a -> s -> Pair b s
 loop f x s = let ((y,_), s') = f (x,z) s in (y,s') where
   z = Basics.snd $ Basics.fst (f (x,z) s)
 
-cnter : (Pair Unit (Lazy Unit)) -> Nat -> (Pair (Pair Nat (Lazy Unit)) Nat)
+cnter : Pair Unit (Lazy Unit) -> Nat -> Lazy (Pair (Pair Nat (Lazy Unit)) Nat)
 cnter _ s = ((s,()), s+1)
 
 {-
@@ -36,17 +36,10 @@ cnter _ s = ((s,()), s+1)
   therefore, z is a fixpoint of `snd . (f x)`.
 -}
 
-cnter' : Unit -> Nat -> (Pair Nat Nat) 
-cnter' = Main.loop cnter
-
 main : IO Unit
 main = do
-  printLn (cnter' () 3)
-
-{-
-aut_loop : Automata (Pair a c) (Pair b c) -> Automata a b
-aut_loop (Aut{s} f) = Aut{s} ( \x => \s => let (y,z) = f (x,z) s in y )
--}
+  let x = (Main.loop cnter) () 3
+  printLn x
 
 Category Automata where
   id = Aut{s=Unit} MkPair
@@ -67,7 +60,7 @@ Arrow Automata where
 
 {-
 ArrowLoop Automata where
-  loop (Aut{s} f) = Aut{s} ( \(x,z) => \s => let (y,z) = f (x,z) s in y )
+  loop (Aut{s} f) = Aut{s} (Main.loop f)
 -}
 
 counter : Automata Bool Nat
