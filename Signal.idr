@@ -45,6 +45,10 @@ data SF : PairKind -> PairKind -> Type where
   UncutR : SF a (a >< PKNil)
   Assoc : SF ((a >< b) >< c) (a >< (b >< c))
   Unassoc : SF (a >< (b >< c)) ((a >< b) >< c)
+  Drop : SF a PKNil
+  Copy : SF a (a >< a)
+  Swap : SF (a >< b) (b >< a)
+  Loop : SF (a >< c) (b >< c) -> SF a b
 
   LiftB : (a -> b) -> SF (PK $ behavior a) (PK $ behavior b)
   Automata : (a -> s -> Pair b s) -> s -> SF (PK $ event a) (PK $ event b)
@@ -57,11 +61,11 @@ infixr 1 ~~>
 liftE : (a -> b) -> SF (PK $ event a) (PK $ event b)
 liftE f = Automata ( \x => \_ => (f x, ()) ) ()
 
-implementation Category SF where
+Category SF where
   id = Identity
   (.) = Compose
 
-implementation GArrow SF (><) PKNil where
+[G_SF] GArrow SF (><) PKNil where
   ga_first = First
   ga_second = Second
   ga_cutl = CutL
@@ -70,3 +74,16 @@ implementation GArrow SF (><) PKNil where
   ga_uncutr = UncutR
   ga_assoc = Assoc
   ga_unassoc = Unassoc
+
+[GDrop_SF] GArrowDrop SF (><) PKNil using G_SF where
+  ga_drop = Drop
+
+[GCopy_SF] GArrowCopy SF (><) PKNil using G_SF where
+  ga_copy = Copy
+
+[GSwap_SF] GArrowSwap SF (><) PKNil using G_SF where
+  ga_swap = Swap
+
+[GLoop_SF] GArrowLoop SF (><) PKNil using GSwap_SF where
+  ga_loopl = Loop
+  ga_loopr f = Loop (ga_swap >>> f >>> ga_swap)

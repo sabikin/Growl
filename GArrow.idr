@@ -19,26 +19,26 @@ infixr 3 ><
 (><) : GArrow{k} g p u => k -> k -> k
 (><){p} = p
 
-interface GArrow g p u => GArrowDrop (g: k->k->Type) (p: k->k->k) (u: k) | g where
+interface GArrow g p u => GArrowDrop (g: k->k->Type) (p: k->k->k) (u: k) where
   ga_drop : g x u
 
-interface GArrow g p u => GArrowCopy (g: k->k->Type) (p: k->k->k) (u: k) | g where
+interface GArrow g p u => GArrowCopy (g: k->k->Type) (p: k->k->k) (u: k) where
   ga_copy : g x (p x x)
 
-interface GArrow g p u => GArrowSwap (g: k->k->Type) (p: k->k->k) (u: k) | g where
+interface GArrow g p u => GArrowSwap (g: k->k->Type) (p: k->k->k) (u: k) where
   ga_swap : g (p x y) (p y x)
 
-interface GArrow g p u => GArrowReify (g: Type->Type->Type) (p: Type->Type->Type) u a b c d | g where
+interface GArrow g p u => GArrowReify (g: Type->Type->Type) (p: Type->Type->Type) u a b c d where
   ga_reify : (a -> b) -> g c d
 
-interface GArrow g p u => GArrowConst (g: Type->Type->Type) (p: Type->Type->Type) u t | g where
+interface GArrow g p u => GArrowConst (g: Type->Type->Type) (p: Type->Type->Type) u t where
   ga_const : t -> g u t
 
-interface GArrow g p u => GArrowLoop (g: k->k->Type) (p: k->k->k) (u: k) | g where
+interface GArrow g p u => GArrowLoop (g: k->k->Type) (p: k->k->k) (u: k) where
   ga_loopl : g (p x z) (p y z) -> g x y
   ga_loopr : g (p z x) (p z y) -> g x y
 
-interface GArrow g p u => GArrowApply (g: Type->Type->Type) (p: Type->Type->Type) u | g where
+interface GArrow g p u => GArrowApply (g: Type->Type->Type) (p: Type->Type->Type) u where
   ga_applyl : g (p a (g a b)) b
   ga_applyr : g (p (g a b) a) b
 
@@ -73,14 +73,13 @@ ArrowApply a => GArrowApply a Pair Unit where
   ga_applyl = ga_swap{u=Unit} >>> app
   ga_applyr = app
 
+
 data Expr : GArrow{k} g p u => k -> Type where
   Var : GArrow{k} g p u => String -> Expr{k}{g}{p}{u} a
   App : GArrow{k} g p u => g a b -> Expr{k}{g}{p}{u} a -> Expr{k}{g}{p}{u} b
 
 data Assign : GArrow{k} g p u => k -> Type where
   MkAssign : GArrow{k} g p u => String -> Expr{k}{g}{p}{u} a -> Assign{k}{g}{p}{u} a
-
-data TypedVar k = MkTypedVar String
 
 infixr 4 :=
 (:=) : GArrow g p u => String -> Expr{g}{p}{u} a -> Assign{g}{p}{u} a
@@ -94,7 +93,7 @@ f : Integer -> Integer
 f x = x+1
 
 g : Morphism Integer Integer
-g = ga_reify f
+g = ga_reify{p=Pair}{u=Unit} f
 
 {-
   counter : Automata Bool Int
