@@ -42,6 +42,8 @@ interface GArrow g p u => GArrowApply (g: Type->Type->Type) (p: Type->Type->Type
   ga_applyl : g (p a (g a b)) b
   ga_applyr : g (p (g a b) a) b
 
+interface GArrowLoop g p u => Circuit (g: k->k->Type) (p: k->k->k) (u: k) where
+  delay : g a a
 
 Arrow a => GArrow a Pair Unit where
   ga_first = first

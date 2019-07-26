@@ -51,7 +51,7 @@ data SF : PairKind -> PairKind -> Type where
   Loop : SF (a >< c) (b >< c) -> SF a b
 
   LiftB : (a -> b) -> SF (PK $ behavior a) (PK $ behavior b)
-  Automata : (a -> s -> Pair b s) -> s -> SF (PK $ event a) (PK $ event b)
+  Auto : (a -> s -> Pair b s) -> s -> SF (PK $ event a) (PK $ event b)
   Hold : SF (PK $ event a) (PK $ behavior a)
   Sample : SF (kpair (behavior a) Signal.spike) (PK $ event a)
 infixr 1 ~~>
@@ -59,7 +59,7 @@ infixr 1 ~~>
 (~~>) = SF
 
 liftE : (a -> b) -> SF (PK $ event a) (PK $ event b)
-liftE f = Automata ( \x => \_ => (f x, ()) ) ()
+liftE f = Auto ( \x => \_ => (f x, ()) ) ()
 
 Category SF where
   id = Identity
