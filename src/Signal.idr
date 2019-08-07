@@ -3,8 +3,6 @@ module Signal
 import Control.Category
 import GArrow
 
-infixr 3 ><
-
 %access public export
 
 data Tag = Event | Behavior
@@ -21,6 +19,7 @@ spike = event Unit
 
 data PairKind = PK Kind | PKNil | PKPair PairKind PairKind
 
+infixr 3 ><
 (><) : PairKind -> PairKind -> PairKind
 (><) = PKPair
 
@@ -38,11 +37,8 @@ data SF : PairKind -> PairKind -> Type where
   Identity : SF a a
   Compose : SF b c -> SF a b -> SF a c
   First : SF a b -> SF (a >< c) (b >< c)
-  Second : SF a b -> SF (c >< a) (c >< b)
   CutL : SF (PKNil >< a) a
-  CutR : SF (a >< PKNil) a
   UncutL : SF a (PKNil >< a)
-  UncutR : SF a (a >< PKNil)
   Assoc : SF ((a >< b) >< c) (a >< (b >< c))
   Unassoc : SF (a >< (b >< c)) ((a >< b) >< c)
   Drop : SF a PKNil
@@ -67,11 +63,11 @@ Category SF where
 
 [G_SF] GArrow SF (><) PKNil where
   ga_first = First
-  ga_second = Second
+  ga_second f = Swap >>> (First f) >>> Swap
   ga_cutl = CutL
-  ga_cutr = CutR
+  ga_cutr = Swap >>> CutL
   ga_uncutl = UncutL
-  ga_uncutr = UncutR
+  ga_uncutr = UncutL >>> Swap
   ga_assoc = Assoc
   ga_unassoc = Unassoc
 
