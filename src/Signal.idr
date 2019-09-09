@@ -1,7 +1,7 @@
 module Signal
 
 import Control.Category
-import GArrow
+import Monoidal
 
 %access public export
 
@@ -32,6 +32,8 @@ fold_vk : VecKind -> PairKind
 fold_vk (VK []) = PKNil
 fold_vk (VK (x :: xs)) = (PK x) >< (fold_vk (VK xs))
 
+interface Tagged (f: Type->k) where
+  (><) : k -> k -> k
 
 data SF : PairKind -> PairKind -> Type where
   Identity : SF a a

@@ -1,0 +1,61 @@
+stype Const : Type -> SType
+sfun constC : a -> (() ~> Const a)
+sfun ConstToBehavior : Const a ~> Behavior a
+
+sfun constB : a -> (() ~> Behavior a)
+constB x = constC x >>> ConstToBehavior
+
+state : (a ~> b) -> (a ~> Behavior $ Tuple s)
+state $ F >>> G = (state F) ++ (state G)
+state $ first F = state F
+state $ cutl F = state F
+state $ uncutl F = state F
+state $ assoc F = state F
+state $ unassoc F = state F
+state $ drop F = \_ ~> ()
+state $ copy F = state F
+state $ swap F = state F
+state $ loopl F = state F
+state $ LiftB f = \_ ~> ()
+state $ Auto f init = 
+state $ Hold = single Hold
+state $ Sample = ()
+state $ constC = ()
+
+state_type : (a ~> b) -> Type
+state_type F = let Behavior s = typeof $ state F in s
+
+appL : ((b,c) ~> d) -> (a ~> b) -> ((a,c) ~> d)
+appL F G = (first G) >>> F
+
+appR : ((b,c) ~> d) -> (a ~> c) -> ((b,a) ~> d)
+appR F G = (second G) >>> F
+
+appConstL : ((Const a, b) ~> c) -> a -> (b ~> c)
+appConstL F x = partialAppL F (constC x) >>> cutl
+
+appConstR : ((a, Const b) ~> c) -> b -> (a ~> c)
+appConstR F x = partialAppR F (constC x) >>> cutr
+
+appConstLB : ((Behavior a, b) ~> c) -> a -> (b ~> c)
+appConstLB F x = appConstL (First ConstToBehavior >>> F) x
+
+appConstRB : ((a, Behavior b) ~> c) -> b -> (a ~> c)
+appConstRB F x = appConstR (Second ConstToBehavior >>> F) x
+
+sfun RouteE : (a -> Either b c) -> (Event a ~> (Event b, Event c))
+sfun MergeB : (Behavior a, Behavior b) ~> Behavior (a,b)
+sfun MergeE : (Event a, Event b) ~> Event (Maybe a, Maybe b)
+
+SplitB : Behavior (a,b) ~> (Behavior a, Behavior b)
+SplitB = (liftB first) *** (liftB second)
+
+FilterMapE : (a -> Maybe b) -> (Event a ~> Event b)
+FilterMapE f = RouteE (maybeToEither . f) >>> DropL
+  where
+    maybeToEither $ Just x = Right x
+    maybeToEither Nothing = Left ()
+
+FilterE : (a -> Bool) -> (Event a ~> Event a)
+FilterE p = FilterMapE ((filter p) . Just)
+
