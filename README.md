@@ -1,2 +1,2 @@
 # Growl
-A Idris library implementing FRP and Actor Model.
+A framework for integrating some programming paradigms, based on FRP and Actor Model.
